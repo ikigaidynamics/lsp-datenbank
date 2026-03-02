@@ -1,87 +1,184 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import lspLogo from 'figma:asset/9d2e39b17304e3c95797c4ba100d35501b94eef9.png';
 import type { LoginRequest } from '@/api/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
-type LoginScreenProps = {
+interface LoginScreenProps {
   onLogin: (data: LoginRequest) => Promise<void>;
-  error: string | null;
-};
+}
 
-export function LoginScreen({ onLogin, error }: LoginScreenProps) {
+export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!username || !password) {
+      toast.error('Bitte Benutzername und Passwort eingeben.');
+      return;
+    }
+    setIsLoading(true);
     try {
       await onLogin({ username, password });
     } catch {
-      toast.error('Benutzername oder Passwort falsch.');
+      toast.error('Login fehlgeschlagen. Bitte prüfen Sie Ihre Zugangsdaten.');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-full max-w-sm">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-          <div className="flex flex-col items-center mb-8">
-            <img src={lspLogo} alt="LSP Logo" className="h-12 mb-4" />
-            <h1 className="text-gray-900 text-center">Partnerdatenbank</h1>
-            <p className="text-sm text-gray-600 mt-1">Bitte melden Sie sich an</p>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#f9fafb',
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '400px',
+        margin: '0 16px',
+      }}>
+        <div style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '16px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            padding: '32px 32px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}>
+            <img
+              src={lspLogo}
+              alt="Lausitz Science Park"
+              style={{ height: '72px', marginBottom: '16px' }}
+            />
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: 600,
+              color: '#111827',
+              margin: 0,
+            }}>
+              Partnerdatenbank
+            </h2>
+            <p style={{
+              color: '#6b7280',
+              marginTop: '4px',
+              fontSize: '14px',
+            }}>
+              Melden Sie sich mit Ihren Zugangsdaten an
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="username">Benutzername</Label>
-              <Input
-                id="username"
+          <form onSubmit={handleSubmit} style={{ padding: '0 32px 24px' }}>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: '#374151',
+                marginBottom: '4px',
+              }}>
+                Benutzername
+              </label>
+              <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Benutzername"
-                required
-                autoFocus
-                className="mt-1.5"
+                placeholder="Benutzername eingeben"
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
               />
             </div>
 
-            <div>
-              <Label htmlFor="password">Passwort</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Passwort"
-                required
-                className="mt-1.5"
-              />
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: 500,
+                color: '#374151',
+                marginBottom: '4px',
+              }}>
+                Passwort
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Passwort eingeben"
+                  style={{
+                    width: '100%',
+                    padding: '8px 40px 8px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#9ca3af',
+                    padding: '4px',
+                  }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
-            )}
-
-            <Button
+            <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full"
+              disabled={isLoading}
+              style={{
+                width: '100%',
+                padding: '10px',
+                backgroundColor: '#2563eb',
+                color: 'white',
+                fontWeight: 500,
+                fontSize: '14px',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                opacity: isLoading ? 0.5 : 1,
+              }}
             >
-              {isSubmitting ? 'Anmelden...' : 'Anmelden'}
-            </Button>
+              {isLoading ? 'Wird angemeldet...' : 'Anmelden'}
+            </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              Demo-Zugänge: admin / sandra / gast
+          <div style={{
+            padding: '12px 32px',
+            backgroundColor: '#f9fafb',
+            borderTop: '1px solid #f3f4f6',
+            textAlign: 'center',
+          }}>
+            <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
+              Demo-Zugänge: admin / sandra / gast (Passwort: name + 123)
             </p>
           </div>
         </div>

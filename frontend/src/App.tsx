@@ -26,7 +26,7 @@ export default function App() {
   if (!auth.user) {
     return (
       <>
-        <LoginScreen onLogin={auth.login} error={auth.error} />
+        <LoginScreen onLogin={auth.login} />
         <Toaster />
       </>
     );

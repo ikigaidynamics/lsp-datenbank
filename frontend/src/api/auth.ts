@@ -1,7 +1,7 @@
 import { fetchWithAuth } from "./client";
 import type { AuthUser, LoginRequest } from "./types";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 export async function login(data: LoginRequest): Promise<AuthUser> {
   const response = await fetch(`${API_URL}/api/auth/login`, {
