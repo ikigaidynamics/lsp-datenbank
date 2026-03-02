@@ -1,11 +1,20 @@
-import { Shield } from 'lucide-react';
+import { LogOut, Shield } from 'lucide-react';
 import lspLogo from 'figma:asset/9d2e39b17304e3c95797c4ba100d35501b94eef9.png';
+import type { AuthUser } from '@/api/types';
 
-type NavigationProps = {
-  onNavigateToPermissions?: () => void;
+const ROLE_LABELS: Record<string, string> = {
+  readonly: 'Read-only',
+  readwrite: 'Read/Write',
+  admin: 'Admin',
 };
 
-export function Navigation({ onNavigateToPermissions }: NavigationProps) {
+type NavigationProps = {
+  user: AuthUser;
+  onNavigateToPermissions?: () => void;
+  onLogout?: () => void;
+};
+
+export function Navigation({ user, onNavigateToPermissions, onLogout }: NavigationProps) {
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 py-4">
@@ -26,8 +35,19 @@ export function Navigation({ onNavigateToPermissions }: NavigationProps) {
             )}
             <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg">
               <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-              <span className="text-sm">Eingeloggt als: Sandra (Read/Write)</span>
+              <span className="text-sm">
+                Eingeloggt als: {user.displayName ?? user.username} ({ROLE_LABELS[user.role] ?? user.role})
+              </span>
             </div>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-2 px-3 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm">Abmelden</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
