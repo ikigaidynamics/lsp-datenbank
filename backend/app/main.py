@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routers import auth, export, partnerships, users
+
 app = FastAPI(
     title="LSP Partnerdatenbank",
     description="API für den Lausitz Science Park – Partnerdatenbank",
@@ -14,6 +16,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(partnerships.router)
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(export.router)
 
 
 @app.get("/api/health")
