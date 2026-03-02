@@ -1,12 +1,14 @@
 import { Eye, Edit3, ShieldCheck, ArrowLeft, Check, X } from 'lucide-react';
 import { Navigation } from './Navigation';
+import type { useAuth } from '@/hooks/useAuth';
 
 type PermissionsScreenProps = {
   onBack: () => void;
   onNavigateToOverview: () => void;
+  auth: ReturnType<typeof useAuth>;
 };
 
-export function PermissionsScreen({ onBack, onNavigateToOverview }: PermissionsScreenProps) {
+export function PermissionsScreen({ onBack, onNavigateToOverview, auth }: PermissionsScreenProps) {
   const roles = [
     {
       id: 'readonly',
@@ -76,10 +78,12 @@ export function PermissionsScreen({ onBack, onNavigateToOverview }: PermissionsS
     return colors[color as keyof typeof colors] || colors.blue;
   };
 
+  const currentRole = auth.user?.role;
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
+      <Navigation user={auth.user!} onLogout={auth.logout} />
+
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Back button */}
         <button
@@ -103,7 +107,8 @@ export function PermissionsScreen({ onBack, onNavigateToOverview }: PermissionsS
           {roles.map((role) => {
             const Icon = role.icon;
             const colors = getColorClasses(role.color);
-            
+            const isCurrentRole = role.id === currentRole;
+
             return (
               <div
                 key={role.id}
@@ -140,8 +145,8 @@ export function PermissionsScreen({ onBack, onNavigateToOverview }: PermissionsS
                   </ul>
                 </div>
 
-                {/* Card footer */}
-                {role.id === 'readwrite' && (
+                {/* Card footer – current role indicator */}
+                {isCurrentRole && (
                   <div className={`${colors.bg} px-6 py-3 border-t ${colors.border}`}>
                     <div className="flex items-center gap-2 text-sm">
                       <div className={`w-2 h-2 ${colors.accent} rounded-full`}></div>
@@ -165,7 +170,7 @@ export function PermissionsScreen({ onBack, onNavigateToOverview }: PermissionsS
             <div>
               <h4 className="text-gray-900 mb-2">Rollenverwaltung</h4>
               <p className="text-sm text-gray-700 mb-3">
-                Benutzerrollen können nur von Administratoren zugewiesen und geändert werden. 
+                Benutzerrollen können nur von Administratoren zugewiesen und geändert werden.
                 Wenn Sie eine Änderung Ihrer Berechtigungen benötigen, wenden Sie sich bitte an den Systemadministrator.
               </p>
               <p className="text-sm text-gray-600">
