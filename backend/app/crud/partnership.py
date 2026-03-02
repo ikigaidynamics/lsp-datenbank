@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import or_
+from sqlalchemy import Text, cast, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.models import SciencePark, University
@@ -57,9 +57,24 @@ def get_partnerships(
         term = f"%{search}%"
         query = query.outerjoin(University).filter(
             or_(
+                # Park text fields
                 SciencePark.name.ilike(term),
+                SciencePark.land.ilike(term),
                 SciencePark.stadt.ilike(term),
+                SciencePark.bisherige_kooperation.ilike(term),
+                SciencePark.bemerkungen.ilike(term),
+                SciencePark.ansprechpartner.ilike(term),
+                SciencePark.kontaktdetails.ilike(term),
+                SciencePark.webpraesenz.ilike(term),
+                # Park JSON array (cast to text for ilike)
+                cast(SciencePark.themen, Text).ilike(term),
+                # University text fields
                 University.name.ilike(term),
+                University.standort.ilike(term),
+                University.ansprechpartner.ilike(term),
+                University.website.ilike(term),
+                # University JSON array
+                cast(University.forschungsschwerpunkte, Text).ilike(term),
             )
         )
 

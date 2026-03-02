@@ -1,7 +1,11 @@
-import { useEffect } from 'react';
-import { Search, Filter, ExternalLink, Eye } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Search, Filter, ExternalLink, Eye, Pencil, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Navigation } from './Navigation';
+import { ExpandableTags } from './ui/ExpandableTags';
+import { EditPartnershipDialog } from './overview/EditPartnershipDialog';
+import { CreatePartnershipDialog } from './overview/CreatePartnershipDialog';
+import { ColumnToggle, PARK_KEYS, UNI_KEYS } from './overview/ColumnToggle';
 import type { Partnership, KooperationStatus } from '@/api/types';
 import type { useAuth } from '@/hooks/useAuth';
 import { usePartnerships } from '@/hooks/usePartnerships';
@@ -15,7 +19,7 @@ type OverviewScreenProps = {
 };
 
 export function OverviewScreen({ onViewDetail, onNavigateToPermissions, auth }: OverviewScreenProps) {
-  const { partnerships, isLoading, error, fetchAll, updateStatus, update } = usePartnerships();
+  const { partnerships, isLoading, error, fetchAll, updateStatus, update, create } = usePartnerships();
   const filters = useFilters();
 
   useEffect(() => {
@@ -45,6 +49,24 @@ export function OverviewScreen({ onViewDetail, onNavigateToPermissions, auth }: 
   };
 
   const canEdit = auth.hasRole('readwrite');
+  const [editingPartnership, setEditingPartnership] = useState<Partnership | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  // Column visibility
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
+  const toggleColumn = (key: string) => {
+    setHiddenColumns(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+  const v = (key: string) => !hiddenColumns.has(key);
+  const parkColSpan = PARK_KEYS.filter(k => v(k)).length;
+  const uniColSpan = UNI_KEYS.filter(k => v(k)).length;
+  const lastVisiblePark = [...PARK_KEYS].reverse().find(k => v(k));
+  const borderStyle = { borderRight: '2px solid #bfdbfe' };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -97,8 +119,34 @@ export function OverviewScreen({ onViewDetail, onNavigateToPermissions, auth }: 
             </div>
           </div>
 
-          <div className="mt-3 text-sm text-gray-600">
-            {isLoading ? 'Laden...' : `${partnerships.length} ${partnerships.length === 1 ? 'Eintrag' : 'Einträge'} gefunden`}
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-sm text-gray-600">
+              {isLoading ? 'Laden...' : `${partnerships.length} ${partnerships.length === 1 ? 'Eintrag' : 'Einträge'} gefunden`}
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ColumnToggle hiddenColumns={hiddenColumns} onToggle={toggleColumn} />
+              {canEdit && (
+                <button
+                  onClick={() => setShowCreateDialog(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#2563eb',
+                    color: 'white',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Plus style={{ width: '16px', height: '16px' }} />
+                  Partner hinzufügen
+                </button>
+              )}
+            </div>
           </div>
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         </div>
@@ -109,124 +157,129 @@ export function OverviewScreen({ onViewDetail, onNavigateToPermissions, auth }: 
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th colSpan={11} className="px-4 py-3 text-left text-sm text-gray-900 bg-blue-50 border-r-2 border-blue-200">
-                    Lausitz Science Park: Partnerparks und Kooperationsprojekte
-                  </th>
-                  <th colSpan={4} className="px-4 py-3 text-left text-sm text-gray-900 bg-purple-50">
-                    Assoziierte Universitäten
-                  </th>
+                  {parkColSpan > 0 && (
+                    <th colSpan={parkColSpan} className="px-4 py-3 text-left text-sm text-gray-900 bg-blue-50" style={uniColSpan > 0 ? borderStyle : undefined}>
+                      Lausitz Science Park: Partnerparks und Kooperationsprojekte
+                    </th>
+                  )}
+                  {uniColSpan > 0 && (
+                    <th colSpan={uniColSpan} className="px-4 py-3 text-left text-sm text-gray-900 bg-purple-50">
+                      Assoziierte Universitäten
+                    </th>
+                  )}
                   <th className="px-4 py-3 bg-gray-50"></th>
                 </tr>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Name</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Land</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Stadt</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Gründungsjahr</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Bisherige Kooperation</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Datum</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Themen</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Bemerkungen</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Ansprechpartner*in</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Kontaktdetails</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider border-r-2 border-blue-200">Webpräsenz</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Name</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Standort</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Forschungsschwerpunkte/Expertise</th>
-                  <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Ansprechpartner</th>
+                  {v('parkName') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'parkName' ? borderStyle : undefined}>Name</th>}
+                  {v('land') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'land' ? borderStyle : undefined}>Land</th>}
+                  {v('stadt') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'stadt' ? borderStyle : undefined}>Stadt</th>}
+                  {v('gruendungsjahr') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'gruendungsjahr' ? borderStyle : undefined}>Gründungsjahr</th>}
+                  {v('bisherigeKooperation') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'bisherigeKooperation' ? borderStyle : undefined}>Bisherige Kooperation</th>}
+                  {v('datum') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'datum' ? borderStyle : undefined}>Datum</th>}
+                  {v('themen') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'themen' ? borderStyle : undefined}>Themen</th>}
+                  {v('bemerkungen') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'bemerkungen' ? borderStyle : undefined}>Bemerkungen</th>}
+                  {v('parkAnsprechpartner') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'parkAnsprechpartner' ? borderStyle : undefined}>Ansprechpartner*in</th>}
+                  {v('kontaktdetails') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'kontaktdetails' ? borderStyle : undefined}>Kontaktdetails</th>}
+                  {v('webpraesenz') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider" style={lastVisiblePark === 'webpraesenz' ? borderStyle : undefined}>Webpräsenz</th>}
+                  {v('universitaetName') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Name</th>}
+                  {v('standort') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Standort</th>}
+                  {v('forschungsschwerpunkte') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Forschungsschwerpunkte/Expertise</th>}
+                  {v('uniAnsprechpartner') && <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Ansprechpartner</th>}
                   <th className="px-3 py-3.5 text-left text-xs text-gray-600 uppercase tracking-wider">Aktionen</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {partnerships.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-3 py-4 text-sm text-gray-900">{item.parkName}</td>
-                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {canEdit ? (
-                        <select
-                          value={item.land}
-                          onChange={(e) => handleLandChange(item.id, e.target.value)}
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer hover:border-gray-400 transition-colors text-sm"
-                        >
-                          {COUNTRIES.map(land => (
-                            <option key={land} value={land}>{land}</option>
-                          ))}
-                        </select>
-                      ) : item.land}
-                    </td>
-                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">{item.stadt}</td>
-                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">{item.gruendungsjahr}</td>
-                    <td className="px-3 py-4 whitespace-nowrap text-sm">
-                      {canEdit ? (
-                        <select
-                          value={item.bisherigeKooperation ?? ''}
-                          onChange={(e) => handleKooperationChange(item.id, e.target.value)}
-                          className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer hover:border-gray-400 transition-colors text-sm"
-                        >
-                          {KOOPERATION_STATUS.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      ) : (item.bisherigeKooperation ?? '—')}
-                    </td>
-                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {item.datum ? new Date(item.datum).toLocaleDateString('de-DE') : '—'}
-                    </td>
-                    <td className="px-3 py-4 text-sm">
-                      <div className="flex flex-wrap gap-1 max-w-[160px]">
-                        {item.themen.slice(0, 2).map((thema, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800"
+                    {v('parkName') && <td className="px-3 py-4 text-sm text-gray-900" style={lastVisiblePark === 'parkName' ? borderStyle : undefined}>{item.parkName}</td>}
+                    {v('land') && (
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900" style={{ minWidth: '140px', ...(lastVisiblePark === 'land' ? borderStyle : {}) }}>
+                        {canEdit ? (
+                          <select
+                            value={item.land}
+                            onChange={(e) => handleLandChange(item.id, e.target.value)}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer hover:border-gray-400 transition-colors text-sm"
+                            style={{ minWidth: '120px' }}
                           >
-                            {thema}
-                          </span>
-                        ))}
-                        {item.themen.length > 2 && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">
-                            +{item.themen.length - 2}
-                          </span>
+                            {COUNTRIES.map(land => (
+                              <option key={land} value={land}>{land}</option>
+                            ))}
+                          </select>
+                        ) : item.land}
+                      </td>
+                    )}
+                    {v('stadt') && <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900" style={lastVisiblePark === 'stadt' ? borderStyle : undefined}>{item.stadt}</td>}
+                    {v('gruendungsjahr') && <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900" style={lastVisiblePark === 'gruendungsjahr' ? borderStyle : undefined}>{item.gruendungsjahr}</td>}
+                    {v('bisherigeKooperation') && (
+                      <td className="px-3 py-4 whitespace-nowrap text-sm" style={lastVisiblePark === 'bisherigeKooperation' ? borderStyle : undefined}>
+                        {canEdit ? (
+                          <select
+                            value={item.bisherigeKooperation ?? ''}
+                            onChange={(e) => handleKooperationChange(item.id, e.target.value)}
+                            className="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white cursor-pointer hover:border-gray-400 transition-colors text-sm"
+                          >
+                            {KOOPERATION_STATUS.map(option => (
+                              <option key={option} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        ) : (item.bisherigeKooperation ?? '—')}
+                      </td>
+                    )}
+                    {v('datum') && (
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900" style={lastVisiblePark === 'datum' ? borderStyle : undefined}>
+                        {item.datum ? new Date(item.datum).toLocaleDateString('de-DE') : '—'}
+                      </td>
+                    )}
+                    {v('themen') && (
+                      <td className="px-3 py-4 text-sm" style={lastVisiblePark === 'themen' ? borderStyle : undefined}>
+                        <ExpandableTags items={item.themen} colorClass="bg-blue-100 text-blue-800" />
+                      </td>
+                    )}
+                    {v('bemerkungen') && (
+                      <td className="px-3 py-4 text-sm text-gray-600 max-w-[180px]" style={lastVisiblePark === 'bemerkungen' ? borderStyle : undefined}>
+                        <div className="truncate" title={item.bemerkungen ?? ''}>
+                          {item.bemerkungen}
+                        </div>
+                      </td>
+                    )}
+                    {v('parkAnsprechpartner') && <td className="px-3 py-4 text-sm text-gray-900" style={lastVisiblePark === 'parkAnsprechpartner' ? borderStyle : undefined}>{item.parkAnsprechpartner}</td>}
+                    {v('kontaktdetails') && <td className="px-3 py-4 text-sm text-gray-600 max-w-[200px]" style={lastVisiblePark === 'kontaktdetails' ? borderStyle : undefined}>{item.kontaktdetails}</td>}
+                    {v('webpraesenz') && (
+                      <td className="px-3 py-4 whitespace-nowrap text-sm" style={lastVisiblePark === 'webpraesenz' ? borderStyle : undefined}>
+                        {item.webpraesenz && (
+                          <a href={item.webpraesenz} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline">
+                            Link <ExternalLink className="w-3 h-3" />
+                          </a>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-3 py-4 text-sm text-gray-600 max-w-[180px]">
-                      <div className="truncate" title={item.bemerkungen ?? ''}>
-                        {item.bemerkungen}
-                      </div>
-                    </td>
-                    <td className="px-3 py-4 text-sm text-gray-900">{item.parkAnsprechpartner}</td>
-                    <td className="px-3 py-4 text-sm text-gray-600 max-w-[200px]">{item.kontaktdetails}</td>
-                    <td className="px-3 py-4 whitespace-nowrap text-sm border-r-2 border-blue-200">
-                      {item.webpraesenz && (
-                        <a href={item.webpraesenz} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline">
-                          Link <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </td>
-                    <td className="px-3 py-4 text-sm text-gray-900">{item.universitaetName}</td>
-                    <td className="px-3 py-4 text-sm text-gray-900">{item.standort}</td>
-                    <td className="px-3 py-4 text-sm">
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
-                        {item.forschungsschwerpunkte.slice(0, 2).map((schwerpunkt, index) => (
-                          <span key={index} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                            {schwerpunkt}
-                          </span>
-                        ))}
-                        {item.forschungsschwerpunkte.length > 2 && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">
-                            +{item.forschungsschwerpunkte.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-3 py-4 text-sm text-gray-900">{item.uniAnsprechpartner}</td>
+                      </td>
+                    )}
+                    {v('universitaetName') && <td className="px-3 py-4 text-sm text-gray-900">{item.universitaetName}</td>}
+                    {v('standort') && <td className="px-3 py-4 text-sm text-gray-900">{item.standort}</td>}
+                    {v('forschungsschwerpunkte') && (
+                      <td className="px-3 py-4 text-sm">
+                        <ExpandableTags items={item.forschungsschwerpunkte} colorClass="bg-green-100 text-green-800" />
+                      </td>
+                    )}
+                    {v('uniAnsprechpartner') && <td className="px-3 py-4 text-sm text-gray-900">{item.uniAnsprechpartner}</td>}
                     <td className="px-3 py-4 whitespace-nowrap text-sm">
-                      <button
-                        onClick={() => onViewDetail(item)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Details
-                      </button>
+                      <div className="flex items-center gap-1">
+                        {canEdit && (
+                          <button
+                            onClick={() => setEditingPartnership(item)}
+                            className="inline-flex items-center gap-1 px-2 py-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Bearbeiten"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onViewDetail(item)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Details
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -234,6 +287,21 @@ export function OverviewScreen({ onViewDetail, onNavigateToPermissions, auth }: 
             </table>
           </div>
         </div>
+
+        {editingPartnership && (
+          <EditPartnershipDialog
+            partnership={editingPartnership}
+            open={!!editingPartnership}
+            onOpenChange={(open) => { if (!open) setEditingPartnership(null); }}
+            onSave={update}
+          />
+        )}
+
+        <CreatePartnershipDialog
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+          onCreate={create}
+        />
       </div>
     </div>
   );

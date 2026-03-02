@@ -17,10 +17,10 @@ type NavigationProps = {
 export function Navigation({ user, onNavigateToPermissions, onLogout }: NavigationProps) {
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div style={{ padding: '12px 24px' }}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={lspLogo} alt="LSP Logo" className="h-8" />
+          <div className="flex items-center gap-4">
+            <img src={lspLogo} alt="LSP Logo" style={{ height: '56px' }} />
             <h1 className="text-gray-900">Lausitz Science Park – Partnerdatenbank</h1>
           </div>
           <div className="flex items-center gap-4">
