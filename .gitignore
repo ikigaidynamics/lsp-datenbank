@@ -4,6 +4,7 @@ backend/venv/
 
 # Build output
 frontend/build/
+backend/data/*.db
 __pycache__/
 *.pyc
 

@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql://lsp_user:lsp_pass@localhost:5432/lsp_db"
+    DATABASE_URL: str = "sqlite:///data/lsp.db"
     SECRET_KEY: str = "change-me-in-production"
     SESSION_MAX_AGE: int = 3600 * 8  # 8 hours
 
