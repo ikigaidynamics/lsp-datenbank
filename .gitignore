@@ -1,9 +1,10 @@
 # Dependencies
 node_modules/
+backend/venv/
 
 # Build output
 frontend/build/
-backend/__pycache__/
+__pycache__/
 *.pyc
 
 # Environment
