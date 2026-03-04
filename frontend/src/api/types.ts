@@ -98,3 +98,10 @@ export interface UserCreate {
 export interface UserRoleUpdate {
   role: UserRole;
 }
+
+export interface ProfileUpdateRequest {
+  currentPassword: string;
+  newUsername?: string;
+  newDisplayName?: string;
+  newPassword?: string;
+}

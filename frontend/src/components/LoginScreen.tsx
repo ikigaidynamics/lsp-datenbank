@@ -171,16 +171,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
             </button>
           </form>
 
-          <div style={{
-            padding: '12px 32px',
-            backgroundColor: '#f9fafb',
-            borderTop: '1px solid #f3f4f6',
-            textAlign: 'center',
-          }}>
-            <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-              Demo-Zugänge: admin / sandra / gast (Passwort: name + 123)
-            </p>
-          </div>
         </div>
       </div>
     </div>

@@ -51,3 +51,26 @@ def delete_user(db: Session, user_id: int) -> bool:
     db.delete(user)
     db.commit()
     return True
+
+
+def update_profile(
+    db: Session,
+    user_id: int,
+    new_username: str | None = None,
+    new_display_name: str | None = None,
+    new_password: str | None = None,
+) -> User | None:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return None
+
+    if new_username is not None:
+        user.username = new_username
+    if new_display_name is not None:
+        user.display_name = new_display_name
+    if new_password is not None:
+        user.password_hash = _hash_password(new_password)
+
+    db.commit()
+    db.refresh(user)
+    return user

@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user
 from app.auth.security import create_session, delete_session, verify_password
-from app.crud.user import get_user_by_username
+from app.crud.user import get_user_by_username, update_profile
 from app.database import get_db
 from app.models import User
-from app.schemas.auth import AuthResponse, LoginRequest
+from app.schemas.auth import AuthResponse, LoginRequest, ProfileUpdate
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -61,4 +61,40 @@ def me(
         username=current_user.username,
         role=current_user.role,
         display_name=current_user.display_name,
+    )
+
+
+@router.put("/profile", response_model=AuthResponse)
+def update_user_profile(
+    data: ProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> AuthResponse:
+    if not verify_password(data.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Aktuelles Passwort ist falsch.",
+        )
+
+    if data.new_username is not None:
+        existing = get_user_by_username(db, data.new_username)
+        if existing and existing.id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Benutzername ist bereits vergeben.",
+            )
+
+    updated = update_profile(
+        db,
+        user_id=current_user.id,
+        new_username=data.new_username,
+        new_display_name=data.new_display_name,
+        new_password=data.new_password,
+    )
+
+    return AuthResponse(
+        id=updated.id,
+        username=updated.username,
+        role=updated.role,
+        display_name=updated.display_name,
     )

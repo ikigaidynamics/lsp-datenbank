@@ -70,7 +70,7 @@ export function OverviewScreen({ onViewDetail, onNavigateToPermissions, auth }: 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation user={auth.user!} onNavigateToPermissions={onNavigateToPermissions} onLogout={auth.logout} />
+      <Navigation user={auth.user!} onNavigateToPermissions={onNavigateToPermissions} onLogout={auth.logout} onUpdateProfile={auth.updateProfile} />
 
       <div className="max-w-[1800px] mx-auto px-6 py-8">
         {/* Header */}

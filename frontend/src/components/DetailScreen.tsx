@@ -56,7 +56,7 @@ export function DetailScreen({ partnershipId, onBack, onNavigateToPermissions, a
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation user={auth.user!} onNavigateToPermissions={onNavigateToPermissions} onLogout={auth.logout} />
+        <Navigation user={auth.user!} onNavigateToPermissions={onNavigateToPermissions} onLogout={auth.logout} onUpdateProfile={auth.updateProfile} />
         <div className="max-w-7xl mx-auto px-6 py-8">
           <p className="text-gray-500">Laden...</p>
         </div>
@@ -67,7 +67,7 @@ export function DetailScreen({ partnershipId, onBack, onNavigateToPermissions, a
   if (error || !partnership) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navigation user={auth.user!} onNavigateToPermissions={onNavigateToPermissions} onLogout={auth.logout} />
+        <Navigation user={auth.user!} onNavigateToPermissions={onNavigateToPermissions} onLogout={auth.logout} onUpdateProfile={auth.updateProfile} />
         <div className="max-w-7xl mx-auto px-6 py-8">
           <button onClick={onBack} className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 group">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -85,7 +85,7 @@ export function DetailScreen({ partnershipId, onBack, onNavigateToPermissions, a
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation user={auth.user!} onNavigateToPermissions={onNavigateToPermissions} onLogout={auth.logout} />
+      <Navigation user={auth.user!} onNavigateToPermissions={onNavigateToPermissions} onLogout={auth.logout} onUpdateProfile={auth.updateProfile} />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Back button */}

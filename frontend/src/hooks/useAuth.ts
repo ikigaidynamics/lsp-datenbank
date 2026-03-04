@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import * as authApi from "@/api/auth";
-import type { AuthUser, LoginRequest, UserRole } from "@/api/types";
+import type { AuthUser, LoginRequest, ProfileUpdateRequest, UserRole } from "@/api/types";
 
 const ROLE_LEVEL: Record<UserRole, number> = {
   readonly: 0,
@@ -16,6 +16,7 @@ interface UseAuth {
   login: (data: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
   hasRole: (minRole: UserRole) => boolean;
+  updateProfile: (data: ProfileUpdateRequest) => Promise<void>;
 }
 
 export function useAuth(): UseAuth {
@@ -60,5 +61,10 @@ export function useAuth(): UseAuth {
     [user],
   );
 
-  return { user, isLoading, error, login, logout, hasRole };
+  const updateProfile = useCallback(async (data: ProfileUpdateRequest) => {
+    const updatedUser = await authApi.updateProfile(data);
+    setUser(updatedUser);
+  }, []);
+
+  return { user, isLoading, error, login, logout, hasRole, updateProfile };
 }

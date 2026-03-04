@@ -1,5 +1,5 @@
 import { fetchWithAuth } from "./client";
-import type { AuthUser, LoginRequest } from "./types";
+import type { AuthUser, LoginRequest, ProfileUpdateRequest } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "";
 
@@ -25,4 +25,16 @@ export async function logout(): Promise<void> {
 
 export async function getCurrentUser(): Promise<AuthUser> {
   return fetchWithAuth<AuthUser>("/api/auth/me");
+}
+
+export async function updateProfile(data: ProfileUpdateRequest): Promise<AuthUser> {
+  return fetchWithAuth<AuthUser>("/api/auth/profile", {
+    method: "PUT",
+    body: JSON.stringify({
+      current_password: data.currentPassword,
+      new_username: data.newUsername || null,
+      new_display_name: data.newDisplayName || null,
+      new_password: data.newPassword || null,
+    }),
+  });
 }
