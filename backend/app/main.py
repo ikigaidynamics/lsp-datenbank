@@ -7,6 +7,8 @@ app = FastAPI(
     title="LSP Partnerdatenbank",
     description="API für den Lausitz Science Park – Partnerdatenbank",
     version="0.1.0",
+    docs_url=None,
+    redoc_url=None,
 )
 
 app.add_middleware(

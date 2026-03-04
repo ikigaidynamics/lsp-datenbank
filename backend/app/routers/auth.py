@@ -1,6 +1,6 @@
 """Authentication endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user
@@ -31,6 +31,7 @@ def login(
         key="session_token",
         value=token,
         httponly=True,
+        secure=True,
         samesite="lax",
         max_age=8 * 3600,
     )
@@ -46,9 +47,10 @@ def login(
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(
     response: Response,
+    session_token: str = Cookie(),
     current_user: User = Depends(get_current_user),
 ) -> None:
-    # Cookie will be read by the dependency; delete it from response
+    delete_session(session_token)
     response.delete_cookie("session_token")
 
 
